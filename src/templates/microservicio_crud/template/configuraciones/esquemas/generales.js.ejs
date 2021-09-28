@@ -1,0 +1,34 @@
+exports.header_esquema = {
+    type: "object",
+    required: [
+        "nombre_aplicativo",
+        "identificador_usuario"
+    ],
+    properties: {
+        "nombre_aplicativo": {
+            "type": "string",
+            "pattern": "^(?![nN][uU][lL]{2}$)\\s*\\S.*",
+
+        },
+        "identificador_usuario": {
+            "type": "string",
+            "pattern": "^(?![nN][uU][lL]{2}$)\\s*\\S.*",
+        }
+    }
+};
+
+exports.body_esquema = {
+    type: "object",
+    required: [
+<%_ atributos.filter(function(item){ return item.requerido }).forEach(function(atributo){ _%>
+        "<%= atributo.nombre _%>",
+<%_ }) _%>
+    ],
+    properties: {
+<%_ atributos.forEach(function(atributo){ _%>
+        "<%= atributo.nombre _%>": {
+            "type": "<%= atributo.tipo_schema _%>",
+        },
+<%_ }) _%>
+    }
+};

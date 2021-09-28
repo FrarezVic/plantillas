@@ -1,0 +1,101 @@
+service: <%=lambda_servicio%>
+plugins:
+  - serverless-plugin-include-dependencies
+  - serverless-pseudo-parameters
+
+package:
+  exclude:
+    - node_modules/**
+
+custom:
+  paquete: <%=lambda_paquete%>
+  bucket: ${self:custom.paquete}-bucket-${self:provider.stage}
+<% if (habilitar_apigateway) { _%>
+  apiGateway: ApiPublica-${self:custom.paquete}
+  authorizerId: !ImportValue ${self:custom.apiGateway}-apiGatewayAuthorizer
+  securityGroupIds: !ImportValue ${self:custom.paquete}-securityGroupIds
+  subnetIds1: !ImportValue ${self:custom.paquete}-subnetIds1
+  subnetIds2: !ImportValue ${self:custom.paquete}-subnetIds2
+<% } _%>
+<% if (habilitar_assume_role) { _%>
+  IdCuentaExterna: 000000000000
+  NombreRolExterno: NombreRol
+  ArnRolExterno: arn:aws:iam::${self:custom.IdCuentaExterna}:role/${self:custom.NombreRolExterno}
+<% } _%>
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage,'dev'}
+  tracing:
+    lambda: true
+  timeout: 30
+  deploymentBucket:
+    name: ${self:custom.bucket}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: 'arn:aws:lambda:*:*:*'
+<% if (habilitar_secret_manager) { _%>
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: 'arn:aws:secretsmanager:#{AWS::Region}:#{AWS::AccountId}:secret:*'
+<% } _%>
+<% if (habilitar_assume_role) { _%>
+    - Effect: Allow
+      Action:
+        - sts:assumeRole
+      Resource: ${self:custom.ArnRolExterno}
+<% } _%>
+<% if (habilitar_apigateway) { _%>
+
+  apiGateway:
+    restApiId:
+      'Fn::ImportValue': ${self:custom.public-apiGateway}-restApiId
+    restApiRootResourceId:
+      'Fn::ImportValue': ${self:custom.public-apiGateway}-rootResourceId
+    restApiResources:
+      <%=lambda_endpoint%>:
+        Fn::ImportValue: ${self:custom.public-apiGateway}-ApiGatewayResource
+    description: Descripcion del api
+
+  # vpc:
+  #   securityGroupIds:
+  #     - ${self:custom.securityGroupIds}
+  #   subnetIds:
+  #     - ${self:custom.subnetIds1}
+  #     - ${self:custom.subnetIds2}
+<% } _%>
+
+functions:
+  funcion_lambda:
+    handler: handler.funcion_lambda
+    name: ${self:service}
+    environment:
+      DYNAMODB_TABLE: RepositorioTokens
+      WS_ENDPOINT: WS_ENDPOINT
+      LAMBDA_BUSQUEDA: LAMBDA_BUSQUEDA
+<% if (habilitar_assume_role) { _%>
+      ARN_ROL_EXTERNO: ${self:custom.ArnRolExterno}
+<% } _%>
+<% if (habilitar_apigateway) { _%>
+    events:
+      - http:
+          path: <%=lambda_endpoint%>
+          method: <%=lambda_method%>
+          cors: true
+    #       authorizer:
+    #         type: CUSTOM
+    #         authorizerId: ${self:custom.authorizerId}
+<% } _%>

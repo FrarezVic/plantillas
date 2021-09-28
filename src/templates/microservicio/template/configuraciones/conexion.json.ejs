@@ -1,0 +1,145 @@
+<% if (micro_conexion == 'ambas') { _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_pg": {
+            "host": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "port": 5432
+        },
+        "database_config_mssql": {
+            "server": "HOST_2_DEV",
+            "database": "BD_2_DEV",
+            "user": "USR_2_DEV",
+            "password": "PASS_2_DEV",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    },
+    "pruebas": {
+        "config_id": "pruebas",
+        "database_config_pg": {
+            "host": "HOST_QA",
+            "database": "BD_QA",
+            "user": "USR_QA",
+            "password": "PASS_QA",
+            "port": 5432
+        },
+        "database_config_mssql": {
+            "server": "HOST_2_QA",
+            "database": "BD_2_QA",
+            "user": "USR_2_QA",
+            "password": "PASS_2_QA",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    },
+    "produccion": {
+        "config_id": "produccion",
+        "database_config_pg": {
+            "host": "HOST_PROD",
+            "database": "BD_PROD",
+            "user": "USR_PROD",
+            "password": "PASS_PROD",
+            "port": 5432
+        },
+        "database_config_mssql": {
+            "server": "HOST_2_PROD",
+            "database": "BD_2_PROD",
+            "user": "USR_2_PROD",
+            "password": "PASS_2_PROD",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    }
+}
+<% } else if (micro_conexion == 'mssql') { _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_mssql": {
+            "server": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    },
+    "pruebas": {
+        "config_id": "pruebas",
+        "database_config_mssql": {
+            "server": "HOST_QA",
+            "database": "BD_QA",
+            "user": "USR_QA",
+            "password": "PASS_QA",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    },
+    "produccion": {
+        "config_id": "produccion",
+        "database_config_mssql": {
+            "server": "HOST_PROD",
+            "database": "BD_PROD",
+            "user": "USR_PROD",
+            "password": "PASS_PROD",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    }
+}
+<% } else{ _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_pg": {
+            "host": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "port": 5432
+        }
+    },
+    "pruebas": {
+        "config_id": "pruebas",
+        "database_config_pg": {
+            "host": "HOST_QA",
+            "database": "BD_QA",
+            "user": "USR_QA",
+            "password": "PASS_QA",
+            "port": 5432
+        }
+    },
+    "produccion": {
+        "config_id": "produccion",
+        "database_config_pg": {
+            "host": "HOST_PROD",
+            "database": "BD_PROD",
+            "user": "USR_PROD",
+            "password": "PASS_PROD",
+            "port": 5432
+        }
+    }
+}
+<% }_%>

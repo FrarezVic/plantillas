@@ -1,0 +1,173 @@
+service: ApiPublica-${self:custom.paquete}-V1-service
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage,'dev'}
+  timeout: 30
+  stackName: ApiPublica-${self:custom.paquete}-V1-stack
+  deploymentBucket:
+    name: ${self:custom.bucket}
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-plugin-include-dependencies
+
+custom:
+  paquete: <%=paquete%>
+  bucket: ${self:custom.paquete}-bucket-${self:provider.stage} #No se modifica
+  # domain: !ImportValue  ${self:custom.paquete}-domain
+  # apiCertificate: !ImportValue  ${self:custom.paquete}-apiCertificate
+  public-apiGateway: ApiPublica-${self:custom.paquete}
+  descripcion-paquete:  <%=descripcion%>
+  <% if (authorizer) { _%>
+  authorizer: <%=lambda_authorizer%>
+  <% } _%>
+
+resources:
+  Resources:
+    apiGatewayPublic:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:custom.public-apiGateway}
+        Description: ${self:custom.descripcion-paquete}
+        ApiKeySourceType: HEADER
+        FailOnWarnings: true
+        MinimumCompressionSize: 2048
+        EndpointConfiguration:
+          Types:
+            - REGIONAL
+    apiGatewayMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        ApiKeyRequired: false
+        AuthorizationType: NONE
+        HttpMethod: POST
+        Integration:
+          ConnectionType: INTERNET
+          IntegrationResponses:
+          - ResponseTemplates:
+              application/json: "{\"message\": \"OK\"}"
+            SelectionPattern: '2\d{2}'
+            StatusCode: 200
+          - ResponseTemplates:
+              application/json: "{\"message\": \"Internal Server Error\"}"
+            SelectionPattern: '5\d{2}'
+            StatusCode: 500
+          PassthroughBehavior: WHEN_NO_TEMPLATES
+          RequestTemplates:
+            application/json: "{\"statusCode\": $input.json('$.statusCode'), \"message\": $input.json('$.message')}"
+          Type: MOCK
+          TimeoutInMillis: 29000
+        MethodResponses:
+          - ResponseModels:
+              application/json: { Ref: "apiGatewayModel" }
+            StatusCode: 200
+          - ResponseModels:
+              application/json: { Ref: "apiGatewayModel" }
+            StatusCode: 500
+        OperationName: 'mock'
+        ResourceId: { Ref: "ApiGatewayResourceV1" }
+        RestApiId: { Ref: "apiGatewayPublic" }
+    apiGatewayModel:
+      Type: AWS::ApiGateway::Model
+      DependsOn: apiGatewayPublic
+      Properties:
+        ContentType: 'application/json'
+        RestApiId: { Ref: "apiGatewayPublic" }
+        Schema: {}
+    apiGatewayDeployment:
+      Type: AWS::ApiGateway::Deployment
+      DependsOn: apiGatewayMethod
+      Properties:
+        Description: API Despliegue Mock
+        RestApiId: { Ref: "apiGatewayPublic" }
+        StageName: ${self:provider.stage}
+
+    # /v1
+    ApiGatewayResourceV1:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        RestApiId: { Ref: "apiGatewayPublic" }
+        ParentId: { Fn::GetAtt: "apiGatewayPublic.RootResourceId" }
+        PathPart: "v1"
+<% path_lista.forEach(function(path){ _%>
+    # <%=path.path%>
+    <%=path.name%>:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        RestApiId: { Ref: "apiGatewayPublic" }
+        ParentId: { Ref: "<%=path.ParentId%>" }
+        PathPart: "<%=path.PathPart%>"
+<% }); _%>
+
+<% if (authorizer) { _%>
+#Create Permission for authorizer
+    authorizerPermission:
+      DependsOn:
+       - apiGatewayPublic
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName:
+          "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:custom.authorizer}"
+        Principal:
+          Fn::Join: ["",["apigateway.", { Ref: "AWS::URLSuffix"}]]
+#  Create Authorizer
+    apiGatewayAuthorizer:
+      DependsOn:
+       - apiGatewayPublic
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: ${self:custom.authorizer}
+        IdentitySource: method.request.header.Authorization
+        RestApiId:
+          Ref: apiGatewayPublic
+        Type: TOKEN
+       #IdentityValidationExpression: .+
+        AuthorizerResultTtlInSeconds: 0
+        AuthorizerUri: "arn:aws:apigateway:#{AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:custom.authorizer}/invocations"
+#    # Create ApiGateway response
+<% } _%>
+
+   # Create ApiGateway response
+    apiGatewayResponseUnAuthorized:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        RestApiId:
+          Ref: apiGatewayPublic
+        ResponseType: UNAUTHORIZED
+        ResponseTemplates:
+          application/json: "{\"response\":{\"mensaje\":\"No estas authorizado para ejecutar este API\",\"resultObject\":$context.error.messageString}}"
+
+  Outputs:
+    <% if (authorizer) { _%>
+    # apiGatewayAuthorizer:
+    #   Value:
+    #     Ref: apiGatewayAuthorizer
+    #   Export:
+    #     Name: ${self:custom.public-apiGateway}-apiGatewayAuthorizer
+    <% } _%>
+    apiGatewayRestApiId:
+      Value:
+        Ref: apiGatewayPublic
+      Export:
+        Name: ${self:custom.public-apiGateway}-restApiId
+    apiGatewayRestApiRootResourceId:
+      Value:
+        Fn::GetAtt:
+          - apiGatewayPublic
+          - RootResourceId
+      Export:
+        Name: ${self:custom.public-apiGateway}-rootResourceId
+    ApiGatewayResourceV1:
+      Value:
+        Ref: ApiGatewayResourceV1
+      Export:
+        Name: ${self:custom.public-apiGateway}-ApiGatewayResourceV1
+<% if (path_final) { _%>
+    <%=path_final.name%>:
+      Value:
+        Ref: <%=path_final.name%>
+      Export:
+        Name: ${self:custom.public-apiGateway}-<%=path_final.name%>
+<% } _%>

@@ -1,0 +1,43 @@
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const app = express();
+var puerto = process.env.port || 8080;
+const httpContext = require('express-http-context');
+var logger = require("./funciones/utilerias/logger");
+const uuid = require('uuid');
+var morgan = require('morgan');
+var swaggerUi = require('swagger-ui-express');
+var swaggerDocument = require('./swagger.json');
+const db = require('./model/index.js');
+const routes = require("./rutas/rutas");
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(httpContext.middleware);
+app.disable('x-powered-by');
+
+app.use(function (req, res, next) {
+    var uuidReq = req.headers.id_tracking ? req.headers.id_tracking : uuid.v1();
+    res.setHeader('id_tracking', uuidReq);
+    httpContext.set('id_tracking', uuidReq);
+    httpContext.set('nombre_aplicativo', req.headers.nombre_aplicativo);
+    httpContext.set('identificador_usuario', req.headers.identificador_usuario);
+    next();
+});
+
+morgan.token('header', function (req, res) { return JSON.stringify(req.headers) });
+morgan.token('body', function (req, res) { return JSON.stringify(req.body) });
+app.use(morgan(':status ":method :url" :req[header] :header :body :response-time ms', { stream: logger.stream }))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.get('/', (req, res) => res.json({ message: '<%= micro_descripcion %>'}) );
+
+app.use('<%=micro_url_principal%>', routes);
+
+app.listen(puerto, () => console.log('<%= micro_descripcion %>: ' + puerto))
+
+module.exports = {
+    app
+};

@@ -1,0 +1,11 @@
+{
+    "api": {
+        "method": "POST",
+        "url": "",
+        "headers": {
+            "identificador_usuario": "wnsp",
+            "nombre_aplicativo": "Wanashop",
+            "Authorization": ""
+        }
+    }
+}

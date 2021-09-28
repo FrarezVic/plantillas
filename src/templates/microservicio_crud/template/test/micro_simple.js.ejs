@@ -1,0 +1,84 @@
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const expect = chai.expect;
+chai.use(chaiHttp);
+
+const url = 'http://localhost:8080';
+const body = require('./requests/request.json');
+let registroId = null;
+
+describe('Pruebas de integración | <%=micro_url_principal%>', () => {
+
+    it('create', function(done){
+        this.timeout(30000);
+        chai.request(url)
+            .post('<%=micro_url_principal%>')
+            .send(body)
+            .set('nombre_aplicativo', 'test')
+            .set('identificador_usuario', 'test@frd.org.mx')
+            .end((err, res) => {
+                expect(res).to.have.status(201);
+                expect(res.body).to.have.property('mensaje');
+                expect(res.body).to.have.property('resultado');
+                done();
+                registroId = res.body.resultado.<%=micro_primary_key%>;
+            })
+    })
+
+    it('findAll', function(done){
+        this.timeout(30000);
+        chai.request(url)
+            .get('<%=micro_url_principal%>')
+            .set('nombre_aplicativo', 'test')
+            .set('identificador_usuario', 'test@frd.org.mx')
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('mensaje');
+                expect(res.body).to.have.property('resultado');
+                done();
+            })
+    })
+
+    it('findOne', function(done){
+        this.timeout(30000);
+        chai.request(url)
+            .get(`<%=micro_url_principal%>/${registroId}`)
+            .set('nombre_aplicativo', 'test')
+            .set('identificador_usuario', 'test@frd.org.mx')
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('mensaje');
+                expect(res.body).to.have.property('resultado');
+                done();
+            })
+    })
+
+    it('update', function(done){
+        this.timeout(30000);
+        chai.request(url)
+            .put(`<%=micro_url_principal%>/${registroId}`)
+            .send(body)
+            .set('nombre_aplicativo', 'test')
+            .set('identificador_usuario', 'test@frd.org.mx')
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('mensaje');
+                expect(res.body).to.have.property('resultado');
+                done();
+            })
+    })
+
+    it('delete', function(done){
+        this.timeout(30000);
+        chai.request(url)
+            .delete(`<%=micro_url_principal%>/${registroId}`)
+            .set('nombre_aplicativo', 'test')
+            .set('identificador_usuario', 'test@frd.org.mx')
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('mensaje');
+                expect(res.body).to.have.property('resultado');
+                done();
+            })
+    })
+})

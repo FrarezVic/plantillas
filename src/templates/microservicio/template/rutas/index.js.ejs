@@ -1,0 +1,7 @@
+var express = require('express');
+var controlador = require('../controladores/controlador');
+var router = express.Router();
+
+router.<%=micro_metodo%>('<%=micro_url_secundaria%>', controlador.consultar);
+
+module.exports = router;

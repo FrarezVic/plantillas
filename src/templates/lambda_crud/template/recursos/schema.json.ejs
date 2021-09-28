@@ -1,0 +1,31 @@
+{
+    "insertar": {
+        "id": "insertar",
+        "type": "object",
+        "required": [
+        <%_atributos.filter(item => item.requerido).forEach(function(atributo, index){_%>
+            "<%=atributo.nombre%>"<%= index !== (atributos.length - 1) ? ',' : ''%>
+        <%_});_%>
+        ],
+        "properties": {
+        <%_atributos.forEach(function(atributo, index){_%>
+            "<%=atributo.nombre%>": {
+                "type": "<%=atributo.tipo%>"
+            }<%= index !== (atributos.length - 1) ? ',' : ''%>
+        <%_});_%>
+        }
+    },
+    "actualizar": {
+        "id": "actualizar",
+        "type": "object",
+        "required": [
+        ],
+        "properties": {
+        <%_atributos.forEach(function(atributo, index){_%>
+            "<%=atributo.nombre%>": {
+                "type": "<%=atributo.tipo%>"
+            }<%= index !== (atributos.length - 1) ? ',' : ''%>
+        <%_});_%>
+        }
+    }
+}

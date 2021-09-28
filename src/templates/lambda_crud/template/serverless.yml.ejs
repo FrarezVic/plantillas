@@ -1,0 +1,133 @@
+service: <%=lambda_servicio%>
+plugins:
+  - serverless-plugin-include-dependencies
+  - serverless-pseudo-parameters
+
+package:
+  exclude:
+    - node_modules/**
+
+custom:
+  settings:
+    DYNAMODB_TABLE: <%=dynamo_tabla%>
+    # LAMBDA_MENSAJE_ODS: esf-wanashop-envia-mensaje-ods-on
+  READ_CAPACITY_UNITS: 1
+  WRITE_CAPACITY_UNITS: 1
+  paquete: <%=lambda_paquete%>
+  bucket: ${self:custom.paquete}-bucket-${self:provider.stage}
+  # apiGateway: ApiPublica-${self:custom.paquete}
+  # authorizerId: !ImportValue ${self:custom.apiGateway}-apiGatewayAuthorizer
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  tracing:
+    lambda: true
+  stage: ${opt:stage,'dev'}
+  environment: ${self:custom.settings}
+  timeout: 30
+  deploymentBucket:
+    name: ${self:custom.bucket}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:CreateTable
+        - dynamodb:DeleteTable
+      Resource: "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.settings.DYNAMODB_TABLE}"
+
+  # apiGateway:
+  #   restApiId:
+  #     'Fn::ImportValue': ${self:custom.apiGateway}-restApiId
+  #   restApiRootResourceId:
+  #     'Fn::ImportValue': ${self:custom.apiGateway}-rootResourceId
+  #   restApiResources:
+  #     <%=endpoint_crud%>:
+  #       Fn::ImportValue: ${self:custom.apiGateway}-ApiGatewayResource
+  #   description: descripcion del api
+
+functions:
+    crear:
+      handler: operaciones/insertar.insertar
+      name: ${self:service}-crear
+      description: Función para crear un registro de la tabla <%=dynamo_tabla%>
+      events:
+        - http:
+            path: <%=endpoint_crud%>
+            method: post
+            cors: true
+            # authorizer:
+            #   type: CUSTOM
+            #   authorizerId: ${self:custom.authorizerId}
+    obtener:
+      handler: operaciones/consultar.consultaXId
+      name: ${self:service}-buscar-id
+      description: Función para consultar un registro de la tabla <%=dynamo_tabla%>
+      events:
+        - http:
+            path: <%=endpoint_crud%>/{id}
+            method: get
+            cors: true
+            # authorizer:
+            #   type: CUSTOM
+            #   authorizerId: ${self:custom.authorizerId}
+    listar:
+      handler: operaciones/listar.lista
+      name: ${self:service}-buscar-lista
+      description: Función para consultar los registros de la tabla <%=dynamo_tabla%>
+      events:
+        - http:
+            path: <%=endpoint_crud%>
+            method: get
+            cors: true
+            # authorizer:
+            #   type: CUSTOM
+            #   authorizerId: ${self:custom.authorizerId}
+    actualizar:
+      handler: operaciones/actualizar.actualizar
+      name: ${self:service}-actualizar
+      description: Función para actualizar un registro de la tabla <%=dynamo_tabla%>
+      events:
+        - http:
+            path: <%=endpoint_crud%>/{id}
+            method: put
+            cors: true
+            # authorizer:
+            #   type: CUSTOM
+            #   authorizerId: ${self:custom.authorizerId}
+    eliminar:
+      handler: operaciones/eliminar.eliminar
+      name: ${self:service}-eliminar
+      description: Función para eliminar un registro de la tabla <%=dynamo_tabla%>
+      events:
+        - http:
+            path: <%=endpoint_crud%>/{id}
+            method: delete
+            cors: true
+            # authorizer:
+            #   type: CUSTOM
+            #   authorizerId: ${self:custom.authorizerId}
+
+resources:
+    Resources:
+      <%=dynamo_tabla%>DynamoDbTable:
+        Type: 'AWS::DynamoDB::Table'
+        DeletionPolicy: Retain
+        Properties:
+          AttributeDefinitions:
+            -
+              AttributeName: id
+              AttributeType: S
+          KeySchema:
+            -
+              AttributeName: id
+              KeyType: HASH
+          ProvisionedThroughput:
+            ReadCapacityUnits:  ${self:custom.READ_CAPACITY_UNITS}
+            WriteCapacityUnits:  ${self:custom.WRITE_CAPACITY_UNITS}
+          TableName: ${self:custom.settings.DYNAMODB_TABLE}

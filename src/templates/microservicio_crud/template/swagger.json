@@ -1,0 +1,187 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Consulta de Usuario Banco"
+  },
+  "host": "apigwkong-dev.frd.org.mx:8443",
+  "basePath": "/banco",
+  "tags": [
+    {
+      "name": "Consulta de Usuario"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/consulta_usuario": {
+      "get": {
+        "tags": [
+          "Consulta de Usuario"
+        ],
+        "summary": "Consulta Usuario",
+        "operationId": "consulta_usuario_banco",
+        "description": "Consulta un usuario a través de su correo y sucursal e indica si existe o no. La consulta se realiza en la BD PVS_OPERATIVA_SIB",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "correo",
+            "description": "Correo del usuario",
+            "required": true,
+            "type": "string",
+            "default": "bperez@frd.org.mx"
+          },
+          {
+            "in": "query",
+            "name": "idSucursal",
+            "description": "Sucursal del usuario",
+            "required": true,
+            "type": "string",
+            "default": "276"
+          },
+          {
+            "in": "header",
+            "name": "nombre_aplicativo",
+            "description": "Aplicativo que manda la petición",
+            "required": true,
+            "type": "string",
+            "default": "Wanashop"
+          },
+          {
+            "in": "header",
+            "name": "identificador_usuario",
+            "description": "Usuario que manda la petición",
+            "required": true,
+            "type": "string",
+            "default": "bperez"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/salida_200"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/salida_400"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/salida_500"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "salida_200": {
+      "type": "object",
+      "properties": {
+        "codigo": {
+          "type": "string",
+          "example": "000"
+        },
+        "errores": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "example": []
+        },
+        "mensaje": {
+          "type": "string",
+          "example": "Operación exitosa"
+        },
+        "resultado": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Valido": {
+                "type": "integer",
+                "example": 1,
+                "description": "El 0 indica que el usuario no existe con los parámetros indicados y el 1 indica que existe"
+              }
+            }
+          }
+        }
+      }
+    },
+    "salida_400": {
+      "type": "object",
+      "properties": {
+        "codigo": {
+          "type": "string",
+          "example": "010"
+        },
+        "errores": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "example": []
+        },
+        "mensaje": {
+          "type": "string",
+          "example": "Cabeceras inválidas"
+        },
+        "resultado": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "example": []
+        }
+      },
+      "description": "Posibles códigos de respuesta:\n- codigo: \"010\"\n  mensaje: \"Cabeceras inválidas\"\n- codigo: \"011\"\n  mensaje: \"Esquema inválido\""
+    },
+    "salida_500": {
+      "type": "object",
+      "properties": {
+        "codigo": {
+          "type": "string",
+          "example": "101"
+        },
+        "errores": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "example": []
+        },
+        "mensaje": {
+          "type": "string",
+          "example": "Error al ejecutar proceso"
+        },
+        "resultado": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "example": []
+        }
+      },
+      "description": "Posibles códigos de respuesta:\n- codigo: \"100\"\n  mensaje: \"Error en consulta a base de datos\"\n- codigo: \"101\"\n  mensaje: \"Error al ejecutar proceso\""
+    }
+  },
+  "securityDefinitions": {
+    "apikey": {
+      "name": "tokenHeader",
+      "type": "apiKey",
+      "in": "header"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+    "mensajeEODS" : {
+        "method":"POST",
+        "url": "",
+        "headers": {
+            "Content-Type": "application/json",
+            "nombre_aplicativo": "test",
+            "identificador_usuario" : "test",
+            "Authorization": ""
+        },
+        "data":[],
+        "json":true
+    }
+}

@@ -1,0 +1,119 @@
+﻿![enter image description here](https://www.bmv.com.mx/docs-pub/GESTOR/IMAGENES_EMISORAS/32873.jpg)
+
+<%= micro_nombre %>
+==========
+
+
+<strong>Autor:</strong> <%=usuario_nombre%><br>
+<strong>Email:</strong> [<%=usuario_email%>](<%=usuario_email%>)<br>
+<strong>Fecha:</strong> <%=fecha%><br>
+
+
+## Descripción
+<%= micro_descripcion %>
+
+
+## Como empezar
+
+En el archivo "configuraciones/conexion.json" Sustituye la configuración de las conexiones a la base de datos con los parametros encriptados
+```json
+<% if (micro_conexion == 'ambas') { _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_pg": {
+            "host": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "port": 5432
+        },
+        "database_config_mssql": {
+            "server": "HOST_2_DEV",
+            "database": "BD_2_DEV",
+            "user": "USR_2_DEV",
+            "password": "PASS_2_DEV",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    }
+}
+<% } else if (micro_conexion == 'mssql') { _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_mssql": {
+            "server": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "pool": {
+                "max": 20,
+                "min": 10,
+                "idleTimeoutMillis": 30000
+            }
+        }
+    },
+<% } else{ _%>
+{
+    "desarrollo": {
+        "config_id": "desarrollo",
+        "database_config_pg": {
+            "host": "HOST_DEV",
+            "database": "BD_DEV",
+            "user": "USR_DEV",
+            "password": "PASS_DEV",
+            "port": 5432
+        }
+    },
+}
+<% }_%>
+```
+
+Instalar las dependencias
+```shell
+npm i
+```
+
+Iniciar el servidor
+```shell
+npm start
+```
+
+Ejecutar las pruebas de integración
+```shell
+npm test
+```
+
+## Notas
+<% if (micro_conexion == 'psql' || micro_conexion == 'ambas') { _%>
+En caso de tener problemas con la conexion a postgres, actualiza a las siguientes dependencias
+```json
+"pg": "^8.2.1",
+"pg-protocol": "^1.2.4",
+```
+<% } _%>
+
+En caso de haber mas especificaciones...
+
+## Tecnologías Utilizadas
+
+| Plugin | README |
+| ------ | ------ |
+| plugin1 | [https://plugin1.net] |
+| plugin2 - Editor | [https://plugin2.net/]|
+| plugin3 | [http://plugin3.com/]|
+
+## Versionamiento
+
+Lista de Versiones del Aplicativo
+
+
+
+## Licencia
+
+Este proyecto fue realizado para uso exclusivo de Fundación Rafael Dondé y se rige bajo sus estatutos y condiciones de uso. 
+Para mas información referirse a [Contacto FDR](http://frd.org.mx/contacto.aspx)

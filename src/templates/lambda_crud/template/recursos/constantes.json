@@ -1,0 +1,11 @@
+{
+    "api": {
+        "method": "GET",
+        "url": "",
+        "headers": {
+            "Authorization": "",
+            "nombre_aplicativo": "PYME",
+            "identificador_usuario": "Orquestador_PyME"
+        }
+    }
+}

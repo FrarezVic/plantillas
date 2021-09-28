@@ -1,0 +1,34 @@
+service: ${self:custom.paquete}-bucket-service
+plugins:
+  - serverless-deployment-bucket
+
+custom:
+ paquete: <%=paquete%>
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage,'dev'}
+  stackName: ${self:custom.paquete}-bucket-stack
+
+#Resource information here
+resources:
+  Resources:
+    bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.paquete}-bucket-${self:provider.stage}
+        AccessControl: <%=tipo_acceso%>
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        VersioningConfiguration:
+          Status: Enabled
+  #Outputs information here
+  Outputs:
+    bucket:
+      Value:
+        Ref: bucket
+      Export:
+        Name: ${self:custom.paquete}-bucket

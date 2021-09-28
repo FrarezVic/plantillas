@@ -1,0 +1,62 @@
+'use strict';
+const valSchema = require('./validate/validadorEsquema');
+// const consumeAPI = require('./servicios/consumeAPI');
+// const invocaLambda = require('./servicios/invocaLambda');
+<% if (habilitar_apigateway) { _%>
+const headers = {
+    "Access-Control-Allow-Origin": "*"
+};
+<% } _%>
+
+module.exports.funcion_lambda = async event => {
+    try {
+
+        let req;
+        if (event.headers) {
+            req = JSON.parse(event.body);
+        } else {
+            req = event;
+        }
+
+        console.log('Request: ' + JSON.stringify(req));
+
+        await valSchema(req);
+
+        let respuesta;
+
+        // ejemplo de consumo de un servicio onPremise
+        // let auth = await consultaDynamo(process.env.DYNAMODB_TABLE, 'id', 1);
+        // respuesta = await consumeAPI(req, auth.resultado, process.env.WS_ENDPOINT);
+        // respuesta = respuesta.body.resultObject[0];
+
+        // ejemplo de consumo de una lambda
+        // let payload = { id: "06196976" };
+        // respuesta = await invocaLambda(process.env.LAMBDA_BUSQUEDA_CLIENTE, payload);
+
+        // ejemplo de consumo de una lambda de otra cuenta
+        // let payload = { id: "06196976" };
+        // respuesta = await invocaLambdaExterna(process.env.LAMBDA_BUSQUEDA_CLIENTE, payload);
+
+        console.log('Respuesta: ' + JSON.stringify(respuesta));
+
+        return {
+<% if (habilitar_apigateway) { _%>
+            headers: headers,
+<% } _%>
+            statusCode: 200,
+            body: JSON.stringify(respuesta),
+        };
+    } catch (e) {
+        console.log('Mensaje de error: ' + e.message);
+        console.log('Error en handler: ', JSON.stringify(e));
+        let error = e.body === undefined ? e : e.body;
+
+        return {
+<% if (habilitar_apigateway) { _%>
+            headers: headers,
+<% } _%>
+            statusCode: e.statusCode || 500,
+            body: JSON.stringify(error)
+        }
+    }
+};

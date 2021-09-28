@@ -1,0 +1,64 @@
+'use strict';
+const crypto = require("crypto");
+const generateUUID = () => crypto.randomBytes(16).toString('hex');
+const insertaDynamo = require('../dao/inserta');
+const valSchema = require('../validaciones/validadorEsquema');
+const esquema = require('../recursos/schema.json').insertar;
+<% if (lambda_eods_enviar) { _%>
+const invocaLambda = require('../servicios/invocaLambda');
+const EVENTTYPE = "<%=lambda_eods_event%>";
+<% } _%>
+const headers = {
+    "Access-Control-Allow-Origin": "*"
+};
+
+module.exports.insertar = async event => {
+    try {
+        let req;
+
+        if (event.headers) {
+            req = JSON.parse(event.body);
+        } else {
+            req = event;
+        }
+
+        await valSchema(req, esquema);
+
+        //parametros que se insertan en tabla
+        let parametros = {
+            id: generateUUID(),
+<% atributos.forEach(function(atributo){ _%>
+            <%= atributo.nombre %>: req.<%= atributo.nombre _%>,
+<% }); _%>
+        };
+
+        let respuesta = await insertaDynamo(process.env.DYNAMODB_TABLE, parametros);
+
+        console.log(JSON.stringify(respuesta));
+<% if (lambda_eods_enviar) { _%>
+
+        // enviar a EODS
+        let payload_eods = {
+            event_type: EVENTTYPE,
+            message: respuesta
+        };
+        await invocaLambda(process.env.LAMBDA_MENSAJE_ODS, payload_eods);
+
+<% } _%>
+        return {
+            statusCode: 201,
+          	headers: headers,
+            body: JSON.stringify(respuesta),
+        };
+    } catch (e) {
+        console.log('Error en handler: ' + JSON.stringify(e));
+        console.log('Mensaje de error: ' + e.message);
+        let error = e.body || e;
+
+        return {
+            statusCode: e.statusCode || 500,
+          	headers: headers,
+            body: JSON.stringify(error)
+        }
+    }
+};

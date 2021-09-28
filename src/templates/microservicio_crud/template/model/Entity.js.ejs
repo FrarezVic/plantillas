@@ -1,0 +1,31 @@
+module.exports = (sequelize, Sequelize) => {
+    const Entity = sequelize.
+        define('<%= micro_tabla %>', {
+            <%=micro_primary_key%>: {
+                type: Sequelize.BIGINT,
+                allowNull: false,
+                primaryKey: true,
+                autoIncrement: true,
+            },
+<%_ atributos.forEach(function(atributo){_%>
+            <%= atributo.nombre _%>: {
+<%_ if(atributo.tipo === 'DECIMAL' ){ _%>
+                type: Sequelize.<%= atributo.tipo _%>(<%= atributo.cantidad_enteros _%>, <%= atributo.cantidad_decimales _%>),
+<%_ } else { _%>
+                type: Sequelize.<%= atributo.tipo _%>,
+<%_ } _%>
+                allowNull: <%= !atributo.requerido %>
+            },
+<%_ });_%>
+        },
+        {
+            schema: '<%= micro_schema %>',
+            freezeTableName: true,
+            underscored: true,
+            timestamps: false
+        }
+    );
+
+    // Entity.removeAttribute('id');
+    return Entity;
+};

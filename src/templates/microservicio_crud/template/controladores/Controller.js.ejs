@@ -1,0 +1,207 @@
+const db = require('../model/index');
+const Entity = db.entity;
+const Op = db.Sequelize.Op;
+var fs = require('fs');
+var logger = require('../funciones/utilerias/logger');
+<%= micro_eods_enviar == 'si' ? '' : '//' _%> var mensajeODS = require('../funciones/utilerias/mensajeODS');
+var config_valida = require('../configuraciones/config_validacion.json');
+var esquema = require('../funciones/validaciones/esquema');
+var { HTTP_CODIGOS } = require('../configuraciones/codigos_http');
+
+var respuesta_json;
+
+exports.create = async (req, res) => {
+    try {
+        respuesta_json = JSON.parse(fs.readFileSync("configuraciones/respuesta.json"));
+
+        let respuesta_validacion = await esquema.validar_parametros(req, config_valida.SimpleHeader);
+        if (respuesta_validacion.detalle) {
+            respuesta_json.codigo = respuesta_validacion.codigo;
+            respuesta_json.errores = respuesta_validacion.detalle.error;
+            respuesta_json.mensaje = respuesta_validacion.mensaje;
+            return res.status(HTTP_CODIGOS._400.estatus).send(respuesta_json);
+        }
+
+        const parametros = {
+            atributo_1: req.body.atributo_1,
+            atributo_2: req.body.atributo_2,
+        };
+
+        const resultado = await Entity.create(parametros);
+
+        <%= micro_eods_enviar == 'si' ? '' : '//' _%> mensajeODS(resultado);
+
+        respuesta_json.codigo = HTTP_CODIGOS._201.contexto._000.codigo;
+        respuesta_json.mensaje = HTTP_CODIGOS._201.contexto._000.mensaje;
+        respuesta_json.resultado = resultado;
+        return res.status(HTTP_CODIGOS._201.estatus).send(respuesta_json);
+    } catch (err) {
+        logger.error('Error al guardar: ' + err);
+        respuesta_json.codigo = HTTP_CODIGOS._500.contexto._101.codigo;
+        respuesta_json.errores.push(err.message);
+        respuesta_json.mensaje = HTTP_CODIGOS._500.contexto._101.mensaje;
+        return res.status(HTTP_CODIGOS._500.estatus).send(respuesta_json);
+    }
+};
+
+exports.findAll = async (req, res) => {
+    try {
+        respuesta_json = JSON.parse(fs.readFileSync("configuraciones/respuesta.json"));
+
+        config_valida.SimpleHeader.body.requerido = false;
+        let respuesta_validacion = await esquema.validar_parametros(req, config_valida.SimpleHeader);
+        if (respuesta_validacion.detalle) {
+            respuesta_json.codigo = respuesta_validacion.codigo;
+            respuesta_json.errores = respuesta_validacion.detalle.error;
+            respuesta_json.mensaje = respuesta_validacion.mensaje;
+            return res.status(HTTP_CODIGOS._400.estatus).send(respuesta_json);
+        }
+
+        const criteria = {};
+
+        const resultado = await Entity.findAll(criteria);
+
+        respuesta_json.codigo = HTTP_CODIGOS._200.contexto._000.codigo;
+        respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._000.mensaje;
+        respuesta_json.resultado = resultado;
+        return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+    } catch (err) {
+        logger.error('Error al consultar: ' + err);
+        respuesta_json.codigo = HTTP_CODIGOS._500.contexto._101.codigo;
+        respuesta_json.errores.push(err.message);
+        respuesta_json.mensaje = HTTP_CODIGOS._500.contexto._101.mensaje;
+        return res.status(HTTP_CODIGOS._500.estatus).send(respuesta_json);
+    }
+};
+
+exports.findOne = async (req, res) => {
+    try {
+        respuesta_json = JSON.parse(fs.readFileSync("configuraciones/respuesta.json"));
+
+        config_valida.SimpleHeader.body.requerido = false;
+        let respuesta_validacion = await esquema.validar_parametros(req, config_valida.SimpleHeader);
+        if (respuesta_validacion.detalle) {
+            respuesta_json.codigo = respuesta_validacion.codigo;
+            respuesta_json.errores = respuesta_validacion.detalle.error;
+            respuesta_json.mensaje = respuesta_validacion.mensaje;
+            return res.status(HTTP_CODIGOS._400.estatus).send(respuesta_json);
+        }
+
+        let criteria = {
+            where: {
+                <%=micro_primary_key%>: req.params.id
+            }
+        };
+
+        const resultado = await Entity.findOne(criteria);
+
+        if (!resultado) {
+            logger.info("No se encontraron resultados");
+            respuesta_json.codigo = HTTP_CODIGOS._200.contexto._001.codigo;
+            respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._001.mensaje;
+            return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+        }
+
+        respuesta_json.codigo = HTTP_CODIGOS._200.contexto._000.codigo;
+        respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._000.mensaje;
+        respuesta_json.resultado = resultado;
+        return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+    }
+    catch (err) {
+        logger.error('Error al consultar: ' + err);
+        respuesta_json.codigo = HTTP_CODIGOS._500.contexto._101.codigo;
+        respuesta_json.errores.push(err.message);
+        respuesta_json.mensaje = HTTP_CODIGOS._500.contexto._101.mensaje;
+        return res.status(HTTP_CODIGOS._500.estatus).send(respuesta_json);
+    }
+};
+
+exports.update = async (req, res) => {
+    try {
+        respuesta_json = JSON.parse(fs.readFileSync("configuraciones/respuesta.json"));
+
+        let respuesta_validacion = await esquema.validar_parametros(req, config_valida.SimpleHeader);
+        if (respuesta_validacion.detalle) {
+            respuesta_json.codigo = respuesta_validacion.codigo;
+            respuesta_json.errores = respuesta_validacion.detalle.error;
+            respuesta_json.mensaje = respuesta_validacion.mensaje;
+            return res.status(HTTP_CODIGOS._400.estatus).send(respuesta_json);
+        }
+
+        let criteria = {
+            where: {
+                <%=micro_primary_key%>: req.params.id
+            }
+        };
+
+        let parametros = {
+            atributo_1: req.body.atributo_1,
+            atributo_2: req.body.atributo_2,
+        };
+
+        let resultado = await Entity.update(parametros, criteria);
+
+        console.log('resultado: ', resultado)
+
+        <%= micro_eods_enviar == 'si' ? '' : '//' _%> mensajeODS(resultado);
+
+        if (resultado[0] === 0) {
+            logger.info("No se encontraron resultados para update");
+            respuesta_json.codigo = HTTP_CODIGOS._200.contexto._001.codigo;
+            respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._001.mensaje;
+            return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+        }
+
+        respuesta_json.codigo = HTTP_CODIGOS._201.contexto._000.codigo;
+        respuesta_json.mensaje = HTTP_CODIGOS._201.contexto._000.mensaje;
+        return res.status(HTTP_CODIGOS._201.estatus).send(respuesta_json);
+    } catch (err) {
+        logger.error('Error al actualizar: ' + err);
+        respuesta_json.codigo = HTTP_CODIGOS._500.contexto._101.codigo;
+        respuesta_json.errores.push(err.message);
+        respuesta_json.mensaje = HTTP_CODIGOS._500.contexto._101.mensaje;
+        return res.status(HTTP_CODIGOS._500.estatus).send(respuesta_json);
+    }
+};
+
+exports.delete = async (req, res) => {
+    try {
+        respuesta_json = JSON.parse(fs.readFileSync("configuraciones/respuesta.json"));
+
+        config_valida.SimpleHeader.body.requerido = false;
+        let respuesta_validacion = await esquema.validar_parametros(req, config_valida.SimpleHeader);
+        if (respuesta_validacion.detalle) {
+            respuesta_json.codigo = respuesta_validacion.codigo;
+            respuesta_json.errores = respuesta_validacion.detalle.error;
+            respuesta_json.mensaje = respuesta_validacion.mensaje;
+            return res.status(HTTP_CODIGOS._400.estatus).send(respuesta_json);
+        }
+
+        let criteria = {
+            where: {
+                <%=micro_primary_key%>: req.params.id
+            }
+        };
+
+        let resultado = await Entity.destroy(criteria);
+
+        console.log('resultado: ', resultado);
+
+        if (resultado === 0) {
+            logger.info("No se encontraron resultados");
+            respuesta_json.codigo = HTTP_CODIGOS._200.contexto._001.codigo;
+            respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._001.mensaje;
+            return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+        }
+
+        respuesta_json.codigo = HTTP_CODIGOS._200.contexto._000.codigo;
+        respuesta_json.mensaje = HTTP_CODIGOS._200.contexto._000.mensaje;
+        return res.status(HTTP_CODIGOS._200.estatus).send(respuesta_json);
+    } catch (err) {
+        logger.error('Error al eliminar: ' + err);
+        respuesta_json.codigo = HTTP_CODIGOS._500.contexto._101.codigo;
+        respuesta_json.errores.push(err.message);
+        respuesta_json.mensaje = HTTP_CODIGOS._500.contexto._101.mensaje;
+        return res.status(HTTP_CODIGOS._500.estatus).send(respuesta_json);
+    }
+};
